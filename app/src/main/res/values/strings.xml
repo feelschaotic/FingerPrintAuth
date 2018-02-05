@@ -1,0 +1,18 @@
+<resources>
+    <string name="app_name">FingerPrintAuth</string>
+    <string name="fingerprint_login_setting_error_limit">指纹验证失败次数过多，建议设置手势密码</string>
+    <string name="fingerprint_setting_error_limit">指纹验证失败次数过多，请稍后再试</string>
+    <string name="fingerprint_auth_error_limit">指纹验证失败次数过多，请使用账号密码登录</string>
+    <string name="fingerprint_auth_fail">指纹验证失败，请重新验证</string>
+    <string name="fingerprint_auth_success">验证成功</string>
+    <string name="fingerprint_set_success">指纹密码设置成功</string>
+    <string name="fingerprint_close_success">关闭成功</string>
+    <string name="fingerprint_is_empty_login">您设备的指纹密码已修改，无法使用指纹密码登录，请使用账号密码登录</string>
+    <string name="fingerprint_is_empty_clear">您设备的指纹密码已修改，无法进行验证</string>
+    <string name="fingerprint_no_support_fingerprint_gesture">很抱歉，您的手机设备暂不支持使用指纹密码，建议设置手势密码</string>
+    <string name="fingerprint_no_support_fingerprint_account">很抱歉，您的手机设备暂不支持使用指纹密码，建议账号密码登录</string>
+    <string name="tips_fingerprint_auth_fail">指纹验证异常</string>
+    <string name="tips_mi5_login_setting_error">指纹密码验证过程有误，建议设置手势密码</string>
+    <string name="tips_mi5_login_auth_error">指纹密码验证过程有误，建议账号密码登录</string>
+    <string name="tips_mi5_setting_open_close_error">指纹密码验证过程有误，请稍后重试</string>
+</resources>
