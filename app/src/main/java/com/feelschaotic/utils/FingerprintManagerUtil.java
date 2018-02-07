@@ -27,7 +27,8 @@ public class FingerprintManagerUtil {
         this.mContext = context;
         mListener = listener;
         mCustomCallback = customCallback;
-        mFingerprintManagerCompat = FingerprintManagerCompat.from(context);
+        //使用getApplicationContext() 避免内存泄露
+        mFingerprintManagerCompat = FingerprintManagerCompat.from(context.getApplicationContext());
         mMyAuthCallback = new MyAuthCallback();
     }
 
