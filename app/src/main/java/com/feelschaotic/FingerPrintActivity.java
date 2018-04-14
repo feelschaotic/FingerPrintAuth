@@ -19,14 +19,12 @@ import java.util.Map;
 
 public class FingerPrintActivity extends Activity {
 
-    public final static String GESTURE_FINGER_TYPE = "gesture_finger_type";
-    public final static String GESTURE_FINGER_LOGIN = "gesture_finger_login";//登陆验证场景
-    public final static String GESTURE_FINGER_SETTING = "gesture_finger_setting";
-    public final static String GESTURE_FINGER_LOGIN_SETTING = "gesture_finger_login_setting";//登陆后的引导设置 和设置页的设置区别开来 手势密码无该场景
-    public final static String GESTURE_FINGER_CLEAR = "gesture_finger_clear";
+    public final static String TYPE = "type";
+    public final static String LOGIN = "login";//登陆验证场景
+    public final static String SETTING = "setting";
+    public final static String LOGIN_SETTING = "login_setting";//登陆后的引导设置 
+    public final static String CLEAR = "clear";
 
-
-    public boolean canBack = false;
     private String mType;
     public static boolean isShow;
     private boolean mIsSupportFingerprint;
@@ -46,11 +44,8 @@ public class FingerPrintActivity extends Activity {
     }
 
     protected void initialize() {
-        mType = getIntent().getStringExtra(GESTURE_FINGER_TYPE);
-        if (TextUtils.isEmpty(mType)) {
-            mType = GESTURE_FINGER_LOGIN;
-        }
-
+        mType = getIntent().getStringExtra(TYPE);
+       
         mFingerprintManagerUtil = new FingerprintManagerUtil(this, () -> beginAuthAnim(), new MyAuthCallbackListener());
         mIsSupportFingerprint = mFingerprintManagerUtil.isSupportFingerprint();
         mFingerPrintTypeController = new FingerPrintTypeController();
@@ -59,17 +54,17 @@ public class FingerPrintActivity extends Activity {
 
         //普通异常情况提示
         exceptionTipsMappingMap = new HashMap<>();
-        exceptionTipsMappingMap.put(GESTURE_FINGER_SETTING, getString(R.string.fingerprint_no_support_fingerprint_gesture));
-        exceptionTipsMappingMap.put(GESTURE_FINGER_LOGIN_SETTING, getString(R.string.fingerprint_no_support_fingerprint_gesture));
-        exceptionTipsMappingMap.put(GESTURE_FINGER_CLEAR, null);
-        exceptionTipsMappingMap.put(GESTURE_FINGER_LOGIN, getString(R.string.fingerprint_no_support_fingerprint_account));
+        exceptionTipsMappingMap.put(SETTING, getString(R.string.fingerprint_no_support_fingerprint_gesture));
+        exceptionTipsMappingMap.put(LOGIN_SETTING, getString(R.string.fingerprint_no_support_fingerprint_gesture));
+        exceptionTipsMappingMap.put(CLEAR, null);
+        exceptionTipsMappingMap.put(LOGIN, getString(R.string.fingerprint_no_support_fingerprint_account));
 
         //小米5乱回调生命周期的异常情况提示
         mi5TipsMappingMap = new HashMap<>();
-        mi5TipsMappingMap.put(GESTURE_FINGER_SETTING, getString(R.string.tips_mi5_setting_open_close_error));
-        mi5TipsMappingMap.put(GESTURE_FINGER_LOGIN_SETTING, getString(R.string.tips_mi5_login_setting_error));
-        mi5TipsMappingMap.put(GESTURE_FINGER_CLEAR, getString(R.string.tips_mi5_setting_open_close_error));
-        mi5TipsMappingMap.put(GESTURE_FINGER_LOGIN, getString(R.string.tips_mi5_login_auth_error));
+        mi5TipsMappingMap.put(SETTING, getString(R.string.tips_mi5_setting_open_close_error));
+        mi5TipsMappingMap.put(LOGIN_SETTING, getString(R.string.tips_mi5_login_setting_error));
+        mi5TipsMappingMap.put(CLEAR, getString(R.string.tips_mi5_setting_open_close_error));
+        mi5TipsMappingMap.put(LOGIN, getString(R.string.tips_mi5_login_auth_error));
 
         initByType();
     }
@@ -104,37 +99,23 @@ public class FingerPrintActivity extends Activity {
         if (mFingerprintManagerUtil != null) {
             mFingerprintManagerUtil.stopsFingerprintListen();
         }
-        stopAnim();
-    }
-
-    private void stopAnim() {
     }
 
     private void initByType() {
         switch (mType) {
-            case GESTURE_FINGER_SETTING:
-                canBack = true;
-                initSettingView();
+            case SETTING:
+            case LOGIN_SETTING:
                 initSetting();
                 break;
-            case GESTURE_FINGER_LOGIN_SETTING:
-                initSettingView();
-                initSetting();
-                break;
-            case GESTURE_FINGER_CLEAR:
-                canBack = true;
-                initVerifyView();
+            case CLEAR:
                 initVerify(getString(R.string.fingerprint_is_empty_clear));
                 break;
-            case GESTURE_FINGER_LOGIN:
-                initVerifyView();
+            case LOGIN:
                 initVerify(getString(R.string.fingerprint_is_empty_login));
                 break;
         }
     }
 
-    private void initSettingView() {
-    }
 
     private void initSetting() {
         if (!mIsSupportFingerprint) {
@@ -144,14 +125,10 @@ public class FingerPrintActivity extends Activity {
         beginAuthenticate();
     }
 
-    private void initVerifyView() {
-    }
 
     private void initVerify(String errorContent) {
         if (!mIsSupportFingerprint) {
-
             logoutAndClearFingerPrint();
-            //showDialog And jumpToInputPhone
             return;
         }
 
@@ -232,7 +209,7 @@ public class FingerPrintActivity extends Activity {
      * 该失败场景都会清掉指纹再次登陆引导设置，所以如果是关闭场景按成功来处理
      */
     private void onAuthExceptionOrBeIntercept() {
-        if (GESTURE_FINGER_CLEAR.equals(mType)) {
+        if (CLEAR.equals(mType)) {
             mFingerPrintTypeController.onAuthenticationSucceeded();
         } else {
             mFingerPrintTypeController.onAuthenticationError(exceptionTipsMappingMap.get(mType));
@@ -274,8 +251,6 @@ public class FingerPrintActivity extends Activity {
 
         @Override
         public void onAuthenticationError(String content) {
-            String tempContent = !TextUtils.isEmpty(content) ? content : getString(R.string.fingerprint_auth_error_limit);
-            //showDialog And jumpToInputPhone
         }
     }
 
@@ -287,8 +262,6 @@ public class FingerPrintActivity extends Activity {
 
         @Override
         public void onAuthenticationError(String content) {
-            String tempContent = !TextUtils.isEmpty(content) ? content : getString(R.string.fingerprint_setting_error_limit);
-            //showDialog
         }
     }
 
@@ -300,8 +273,6 @@ public class FingerPrintActivity extends Activity {
 
         @Override
         public void onAuthenticationError(String content) {
-            String tempContent = !TextUtils.isEmpty(content) ? content : getString(R.string.fingerprint_login_setting_error_limit);
-            //showDialog And jumpToGesture
         }
     }
 
@@ -314,8 +285,6 @@ public class FingerPrintActivity extends Activity {
 
         @Override
         public void onAuthenticationError(String content) {
-            String tempContent = !TextUtils.isEmpty(content) ? content : getString(R.string.fingerprint_setting_error_limit);
-            //showDialog
         }
     }
 
@@ -323,10 +292,10 @@ public class FingerPrintActivity extends Activity {
         private Map<String, FingerPrintType> typeMappingMap = new HashMap<>();
 
         public FingerPrintTypeController() {
-            typeMappingMap.put(GESTURE_FINGER_SETTING, new SettingType());
-            typeMappingMap.put(GESTURE_FINGER_LOGIN_SETTING, new LoginSettingType());
-            typeMappingMap.put(GESTURE_FINGER_CLEAR, new ClearType());
-            typeMappingMap.put(GESTURE_FINGER_LOGIN, new LoginAuthType());
+            typeMappingMap.put(SETTING, new SettingType());
+            typeMappingMap.put(LOGIN_SETTING, new LoginSettingType());
+            typeMappingMap.put(CLEAR, new ClearType());
+            typeMappingMap.put(LOGIN, new LoginAuthType());
         }
 
         @Override
@@ -343,13 +312,6 @@ public class FingerPrintActivity extends Activity {
             if (null != fingerPrintType) {
                 fingerPrintType.onAuthenticationError(content);
             }
-        }
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (canBack) {
-            super.onBackPressed();
         }
     }
 
