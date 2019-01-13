@@ -1,4 +1,4 @@
-package com.feelschaotic.utils;
+package com.feelschaotic.exception;
 
 
 public class FingerPrintException extends RuntimeException {

@@ -7,6 +7,8 @@ import android.support.v4.hardware.fingerprint.FingerprintManagerCompat;
 import android.support.v4.os.CancellationSignal;
 import android.util.Log;
 
+import com.feelschaotic.exception.FingerPrintException;
+
 import javax.annotation.Nonnull;
 import javax.crypto.IllegalBlockSizeException;
 
@@ -33,36 +35,36 @@ public class FingerprintManagerUtil {
     }
 
     public boolean isSupportFingerprint() {
+        boolean isSupport;
         try {
-            if (mFingerprintManagerCompat.isHardwareDetected()//硬件不支持
+            isSupport = mFingerprintManagerCompat.isHardwareDetected()//硬件不支持
                     && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M//版本不支持
                     && ((KeyguardManager) mContext.getSystemService(Context.KEYGUARD_SERVICE)).isKeyguardSecure()//没有屏幕锁
-                    && mFingerprintManagerCompat.hasEnrolledFingerprints()//系统不存在指纹列表
-                    ) {
-                return true;
-            }
+                    && mFingerprintManagerCompat.hasEnrolledFingerprints();//系统不存在指纹列表
         } catch (Exception e) {
             //防止有些机型没有以上api会抛空指针异常
             Log.e(TAG, e.getLocalizedMessage());
             return false;
         }
-        return false;
+        return isSupport;
     }
-
 
     public void beginAuthenticate() throws FingerPrintException {
         try {
-            mCryptoObjectCreatorHelper = new CryptoObjectCreatorHelper(cryptoObject -> {
-                Log.d(TAG, "初始化加密对象完成，开始扫描");
-                isInAuth = true;
-                cancellationSignal = new CancellationSignal();
-                mFingerprintManagerCompat.authenticate(cryptoObject, 0, cancellationSignal, mMyAuthCallback, null);
-                if (mListener != null) {
-                    mListener.onCryptoObjectCreateComplete();
-                }
-            });
+            mCryptoObjectCreatorHelper = new CryptoObjectCreatorHelper(this::onCryptoObjectInitialized);
         } catch (Exception e) {
             throw new FingerPrintException(e);
+        }
+    }
+
+    private void onCryptoObjectInitialized(FingerprintManagerCompat.CryptoObject cryptoObject) {
+        Log.d(TAG, "初始化加密对象完成，开始扫描");
+        isInAuth = true;
+        cancellationSignal = new CancellationSignal();
+
+        mFingerprintManagerCompat.authenticate(cryptoObject, 0, cancellationSignal, mMyAuthCallback, null);
+        if (mListener != null) {
+            mListener.onCryptoObjectCreateComplete();
         }
     }
 

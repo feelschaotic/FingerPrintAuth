@@ -3,13 +3,12 @@ package com.feelschaotic;
 import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.text.TextUtils;
 import android.widget.Toast;
 
 import com.feelschaotic.fingerprintauth.R;
 import com.feelschaotic.utils.AppUtils;
 import com.feelschaotic.utils.DeviceUtils;
-import com.feelschaotic.utils.FingerPrintException;
+import com.feelschaotic.exception.FingerPrintException;
 import com.feelschaotic.utils.FingerprintManagerUtil;
 
 import java.util.ArrayList;
@@ -20,22 +19,21 @@ import java.util.Map;
 public class FingerPrintActivity extends Activity {
 
     public final static String TYPE = "type";
+    public final static String CLEAR = "clear";
     public final static String LOGIN = "login";//登陆验证场景
     public final static String SETTING = "setting";
-    public final static String LOGIN_SETTING = "login_setting";//登陆后的引导设置 
-    public final static String CLEAR = "clear";
+    public final static String LOGIN_SETTING = "login_setting";//登陆后的引导设置
 
     private String mType;
-    public static boolean isShow;
-    private boolean mIsSupportFingerprint;
     private boolean isInAuth = false;
+    private boolean mIsSupportFingerprint;
 
+    private String mBeginAuthenticateMethodName;
+    private ArrayList<String> methodOrderArrayList;
+    private Map<String, String> mi5TipsMappingMap;
+    private Map<String, String> exceptionTipsMappingMap;
     private FingerprintManagerUtil mFingerprintManagerUtil;
     private FingerPrintTypeController mFingerPrintTypeController;
-    private ArrayList<String> methodOrderArrayList;
-    private String mBeginAuthenticateMethodName;
-    private Map<String, String> exceptionTipsMappingMap;
-    private Map<String, String> mi5TipsMappingMap;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -49,9 +47,13 @@ public class FingerPrintActivity extends Activity {
         mFingerprintManagerUtil = new FingerprintManagerUtil(this, () -> beginAuthAnim(), new MyAuthCallbackListener());
         mIsSupportFingerprint = mFingerprintManagerUtil.isSupportFingerprint();
         mFingerPrintTypeController = new FingerPrintTypeController();
-
         methodOrderArrayList = new ArrayList<>();
 
+        initExceptionTipsMapping();
+        initByType();
+    }
+
+    private void initExceptionTipsMapping() {
         //普通异常情况提示
         exceptionTipsMappingMap = new HashMap<>();
         exceptionTipsMappingMap.put(SETTING, getString(R.string.fingerprint_no_support_fingerprint_gesture));
@@ -65,14 +67,11 @@ public class FingerPrintActivity extends Activity {
         mi5TipsMappingMap.put(LOGIN_SETTING, getString(R.string.tips_mi5_login_setting_error));
         mi5TipsMappingMap.put(CLEAR, getString(R.string.tips_mi5_setting_open_close_error));
         mi5TipsMappingMap.put(LOGIN, getString(R.string.tips_mi5_login_auth_error));
-
-        initByType();
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        isShow = true;
         mIsSupportFingerprint = mFingerprintManagerUtil.isSupportFingerprint();
         //回来的时候自动调起验证
         if (isInAuth) {
@@ -91,7 +90,6 @@ public class FingerPrintActivity extends Activity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        isShow = false;
         methodOrderArrayList.clear();
     }
 
@@ -153,7 +151,6 @@ public class FingerPrintActivity extends Activity {
         @Override
         public void onAuthenticationSucceeded(boolean isAuthSuccess) {
             methodOrderArrayList.add(AppUtils.getMethodName());
-            stopAnim();
             if (isAuthSuccess) {
                 mFingerPrintTypeController.onAuthenticationSucceeded();
             } else {
@@ -163,7 +160,6 @@ public class FingerPrintActivity extends Activity {
 
         @Override
         public void onAuthenticationError(int errMsgId, String errString) {
-            stopAnim();
             switch (errMsgId) {
                 case FingerprintManagerUtil.MyAuthCallback.ERROR_BEYOND:
                     mFingerPrintTypeController.onAuthenticationError(null);
@@ -219,7 +215,6 @@ public class FingerPrintActivity extends Activity {
 
     private void onAuthFail(String text) {
         Toast.makeText(FingerPrintActivity.this, text, Toast.LENGTH_LONG).show();
-
     }
 
     private void onAuthSuccess(String text) {
